@@ -68,8 +68,75 @@ internal class AuthUseCaseFactory(
         stateMachine = stateMachine
     )
 
+    fun fetchUserAttributes() = FetchUserAttributesUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun updateUserAttributes() = UpdateUserAttributesUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun confirmUserAttribute() = ConfirmUserAttributeUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun resendUserAttributeConfirmation() = ResendUserAttributeConfirmationUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
     fun getCurrentUser() = GetCurrentUserUseCase(
         fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun setupTotp() = SetupTotpUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun verifyTotpSetup() = VerifyTotpSetupUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun updatePassword() = UpdatePasswordUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        fetchAuthSession = fetchAuthSession(),
+        stateMachine = stateMachine
+    )
+
+    fun resetPassword() = ResetPasswordUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        environment = authEnvironment
+    )
+
+    fun confirmResetPassword() = ConfirmResetPasswordUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        environment = authEnvironment,
+        stateMachine = stateMachine
+    )
+
+    fun signUp() = SignUpUseCase(
+        stateMachine = stateMachine
+    )
+
+    fun confirmSignUp() = ConfirmSignUpUseCase(
+        stateMachine = stateMachine
+    )
+
+    fun resendSignupCode() = ResendSignupCodeUseCase(
+        client = authEnvironment.requireIdentityProviderClient(),
+        environment = authEnvironment,
         stateMachine = stateMachine
     )
 }

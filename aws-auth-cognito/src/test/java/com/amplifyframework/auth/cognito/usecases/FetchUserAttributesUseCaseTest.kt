@@ -17,21 +17,21 @@ package com.amplifyframework.auth.cognito.usecases
 
 import aws.sdk.kotlin.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.AttributeType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.DeviceType
-import aws.sdk.kotlin.services.cognitoidentityprovider.model.ListDevicesResponse
+import aws.sdk.kotlin.services.cognitoidentityprovider.model.GetUserResponse
+import com.amplifyframework.auth.AuthUserAttribute
+import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.cognito.AuthStateMachine
-import com.amplifyframework.auth.exceptions.InvalidStateException
 import com.amplifyframework.auth.exceptions.SignedOutException
 import com.amplifyframework.statemachine.codegen.states.AuthenticationState
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.throwables.shouldThrowWithMessage
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
-class FetchDevicesUseCaseTest {
+class FetchUserAttributesUseCaseTest {
+
     private val client: CognitoIdentityProviderClient = mockk()
     private val fetchAuthSession: FetchAuthSessionUseCase = mockk {
         coEvery { execute().accessToken } returns "access token"
@@ -40,56 +40,44 @@ class FetchDevicesUseCaseTest {
         coEvery { getCurrentState().authNState } returns AuthenticationState.SignedIn(mockk(), mockk())
     }
 
-    private val useCase = FetchDevicesUseCase(
+    private val useCase = FetchUserAttributesUseCase(
         client = client,
         fetchAuthSession = fetchAuthSession,
         stateMachine = stateMachine
     )
 
     @Test
-    fun `fetch devices returns device id and name`() = runTest {
-        coEvery { client.listDevices(any()) } returns ListDevicesResponse {
-            devices = listOf(
-                DeviceType {
-                    deviceKey = "id1"
-                    deviceAttributes = listOf(
-                        AttributeType {
-                            name = "device_name"
-                            value = "name1"
-                        }
-                    )
-                }
-            )
+    fun `fetch user attributes with success`() = runTest {
+        val attributes = listOf(
+            AttributeType {
+                name = "email"
+                value = "email"
+            },
+            AttributeType {
+                name = "nickname"
+                value = "nickname"
+            }
+        )
+
+        val expectedResult = attributes.map { AuthUserAttribute(AuthUserAttributeKey.custom(it.name), it.value) }
+
+        coEvery {
+            client.getUser(any())
+        } returns GetUserResponse {
+            userAttributes = attributes
+            username = ""
         }
 
         val result = useCase.execute()
-        result.first().id shouldBe "id1"
-        result.first().name shouldBe "name1"
+
+        result shouldBe expectedResult
     }
 
     @Test
-    fun `fetch devices returns error if listDevices fails`() = runTest {
-        coEvery { client.listDevices(any()) } throws Exception("bad")
-
-        shouldThrowWithMessage<Exception>("bad") {
-            useCase.execute()
-        }
-    }
-
-    @Test
-    fun `fetch devices returns error if signed out`() = runTest {
+    fun `fetch user attributes fails when not in SignedIn state`() = runTest {
         coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.SignedOut(mockk())
 
         shouldThrow<SignedOutException> {
-            useCase.execute()
-        }
-    }
-
-    @Test
-    fun `fetch devices returns error if not signed in`() = runTest {
-        coEvery { stateMachine.getCurrentState().authNState } returns AuthenticationState.NotConfigured()
-
-        shouldThrow<InvalidStateException> {
             useCase.execute()
         }
     }
