@@ -28,6 +28,10 @@ android {
     namespace = "com.amplifyframework.auth.cognito"
     defaultConfig {
         consumerProguardFiles += file("consumer-rules.pro")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
 }
 
@@ -79,4 +83,5 @@ dependencies {
     androidTestImplementation(project(":aws-api"))
     androidTestImplementation(project(":aws-api-appsync"))
     androidTestImplementation(project(":testutils"))
+    androidTestUtil(libs.test.androidx.orchestrator)
 }
