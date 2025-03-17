@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito.actions
 
+import android.util.Log
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ChallengeNameType
 import aws.sdk.kotlin.services.cognitoidentityprovider.model.ResourceNotFoundException
 import aws.sdk.kotlin.services.cognitoidentityprovider.respondToAuthChallenge
@@ -74,6 +75,8 @@ internal object SignInChallengeCognitoActions : SignInChallengeActions {
             getChallengeResponseKey(challenge)?.also { responseKey ->
                 challengeResponses[responseKey] = answer
             }
+
+            Log.i("VTX", "VTX Challenge Responses: $challengeResponses")
 
             challengeResponses.putAll(
                 attributes.map {

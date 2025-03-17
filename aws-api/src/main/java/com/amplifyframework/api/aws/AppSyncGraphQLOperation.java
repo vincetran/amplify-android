@@ -76,6 +76,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         this.executorService = Objects.requireNonNull(builder.executorService);
         this.onResponse = Objects.requireNonNull(builder.onResponse);
         this.onFailure = Objects.requireNonNull(builder.onFailure);
+        LOG.info("VTX endpoint: " + endpoint);
     }
 
     @Override
@@ -84,12 +85,13 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
         if (ongoingCall != null && (ongoingCall.isExecuted() || ongoingCall.isCanceled())) {
             return;
         }
+        LOG.info("VTX STARTING GRAPHQL OPERATION");
         executorService.submit(this::dispatchRequest);
     }
 
     private void dispatchRequest() {
         try {
-            LOG.debug("Request: " + getRequest().getContent());
+            LOG.info("VTX Request: " + getRequest().getContent());
             RequestDecorator requestDecorator = apiRequestDecoratorFactory.fromGraphQLRequest(getRequest());
             Request okHttpRequest = new Request.Builder()
                 .url(endpoint)
@@ -133,8 +135,9 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
             if (responseBody != null) {
                 try {
                     jsonResponse = responseBody.string();
+                    LOG.info("VTX Response body: " + jsonResponse);
                 } catch (IOException exception) {
-                    LOG.warn("Error retrieving JSON from response.", exception);
+                    LOG.warn("VTX Error retrieving JSON from response.", exception);
                     onFailure.accept(new ApiException(
                         "Could not retrieve the response body from the returned JSON",
                         exception, AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -143,6 +146,7 @@ public final class AppSyncGraphQLOperation<R> extends AWSGraphQLOperation<R> {
                 }
             }
             if (response.code() >= START_OF_CLIENT_ERROR_CODE && response.code() <= END_OF_CLIENT_ERROR_CODE) {
+                LOG.info("VTX RESPONSE CODE: " + response.code());
                 onFailure.accept(new ApiException
                         .NonRetryableException("OkHttp client request failed.", "Irrecoverable error")
                 );

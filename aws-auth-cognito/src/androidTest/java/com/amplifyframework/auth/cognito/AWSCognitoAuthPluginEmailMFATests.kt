@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.cognito
 
 import android.content.Context
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.api.graphql.GraphQLOperation
@@ -100,30 +101,48 @@ class AWSCognitoAuthPluginEmailMFATests {
         // Step 2: Attempt to sign in with the newly created user
         var signInResult = synchronousAuth.signIn(userName, password)
 
+        Log.i("VTX", "VTX fresh_email_mfa_setup Sign In result: $signInResult")
+
         // Validation 1: Validate that the next step is MFA Setup Selection
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_MFA_SETUP_SELECTION, signInResult.nextStep.signInStep)
+
+        Log.i("VTX", "VTX fresh_email_mfa_setup Asserted the next step is MFA Setup")
 
         // Validation 2: Validate that the available MFA choices are Email and TOTP
         assertEquals(setOf(MFAType.EMAIL, MFAType.TOTP), signInResult.nextStep.allowedMFATypes)
 
+        Log.i("VTX", "VTX fresh_email_mfa_setup Asserted MFA choices are Email and TOTP")
+
         // Step 3: Select "Email" as the MFA to set up
         signInResult = synchronousAuth.confirmSignIn("EMAIL_OTP")
 
+        Log.i("VTX", "VTX fresh_email_mfa_setup Confirmed EMAIL_OTP for MFA choice: $signInResult")
+
         // Validation 2: Validate that the next step is to input the user's email address
         assertEquals(AuthSignInStep.CONTINUE_SIGN_IN_WITH_EMAIL_MFA_SETUP, signInResult.nextStep.signInStep)
+
+        Log.i("VTX", "VTX fresh_email_mfa_setup Confirming sign in with email address")
 
         // Step 4: Input the email address to send the code to then wait for the MFA code
         latch = CountDownLatch(1)
         signInResult = synchronousAuth.confirmSignIn(email)
 
+        Log.i("VTX", "VTX fresh_email_mfa_setup Sign In result: $signInResult")
+
         // Validation 3: Validate that the next step is to confirm the emailed MFA code
         assertEquals(AuthSignInStep.CONFIRM_SIGN_IN_WITH_OTP, signInResult.nextStep.signInStep)
+
+        Log.i("VTX", "VTX fresh_email_mfa_setup Asserted sign in with OTP is nex step")
 
         // Wait until the MFA code has been received
         latch?.await(20, TimeUnit.SECONDS)
 
+        Log.i("VTX", "VTX fresh_email_mfa_setup About to confirm sign in with MFA code: $mfaCode")
+
         // Step 5: Input the emailed MFA code for confirmation
         signInResult = synchronousAuth.confirmSignIn(mfaCode)
+
+        Log.i("VTX", "VTX fresh_email_mfa_setup Sign In result: $signInResult")
 
         // Validation 4: Validate that MFA setup is done
         assertEquals(AuthSignInStep.DONE, signInResult.nextStep.signInStep)
